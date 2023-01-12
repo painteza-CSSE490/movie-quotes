@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'Movie Quotes',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
       home: const MovieQuotesListPage(),
     );
