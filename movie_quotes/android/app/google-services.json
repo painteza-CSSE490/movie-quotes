@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "745415003062",
+    "project_id": "painteza-moviequotes-490",
+    "storage_bucket": "painteza-moviequotes-490.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745415003062:android:f9a5a8b624c6d06ebd0f17",
+        "android_client_info": {
+          "package_name": "com.example.movie_quotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "745415003062-q248ebv1nro3v2237okqjso6j1mgd58v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwqO3Cg_Yhv5_c3JeGKh9iIG8EB2Za9sE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745415003062-q248ebv1nro3v2237okqjso6j1mgd58v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

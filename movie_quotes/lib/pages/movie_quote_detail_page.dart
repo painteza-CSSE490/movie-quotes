@@ -13,10 +13,37 @@ class MovieQuoteDetailPage extends StatefulWidget {
 }
 
 class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
+  final movieQuoteTextController = TextEditingController();
+  final movieNameTextController = TextEditingController();
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    movieNameTextController.dispose();
+    movieQuoteTextController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          actions: [
+            IconButton(
+              onPressed: () {
+                // Navigator.pop(context);
+                showEditQuoteDialog(context, widget.mq);
+              },
+              icon: Icon(Icons.edit),
+            ),
+            IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                },
+                icon: Icon(Icons.delete))
+          ],
           title: Text("Movie Quotes"),
         ),
         backgroundColor: Colors.grey[100],
@@ -26,6 +53,63 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
             quote: widget.mq.quote,
           ),
         ));
+  }
+
+  Future<void> showEditQuoteDialog(BuildContext context, MovieQuote quote) {
+    movieNameTextController.text = quote.movie;
+    movieQuoteTextController.text = quote.quote;
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit a Movie Quote'),
+          content:
+              //TODO: change all of this!
+              Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                    border: UnderlineInputBorder(), labelText: "Movie Name"),
+                controller: movieNameTextController,
+              ),
+              TextFormField(
+                  decoration: const InputDecoration(
+                      border: UnderlineInputBorder(), labelText: "Quote"),
+                  controller: movieQuoteTextController),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Cancel'),
+              onPressed: () {
+                // movieNameTextController.text = "";
+                // movieQuoteTextController.text = "";
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Save'),
+              onPressed: () {
+                setState(() {
+                  Navigator.of(context).pop();
+                  // movieNameTextController.text = "";
+                  // movieQuoteTextController.text = "";
+                  quote.movie = movieNameTextController.text;
+                  quote.quote = movieQuoteTextController.text;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -92,3 +176,5 @@ class LabelledTextDisplay extends StatelessWidget {
     ));
   }
 }
+
+const snackbar = SnackBar(content: Text("Deleted!"));
