@@ -1,10 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:movie_quotes/components/movie_quote_row_component.dart';
+import 'package:movie_quotes/managers/movie_quote_collection_manager.dart';
 import 'package:movie_quotes/models/movie_quote.dart';
 import 'package:movie_quotes/pages/movie_quote_detail_page.dart';
-
-import '../components/movie_quote_row_component.dart';
 
 class MovieQuotesListPage extends StatefulWidget {
   const MovieQuotesListPage({super.key});
@@ -14,64 +14,97 @@ class MovieQuotesListPage extends StatefulWidget {
 }
 
 class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
-  final movieQuoteTextController = TextEditingController();
-  final movieNameTextController = TextEditingController();
-  final List<MovieQuote> quotes = [];
+  final quotes = <MovieQuote>[]; // Later we will remove this and use Firestore
+  final quoteTextController = TextEditingController();
+  final movieTextController = TextEditingController();
+
+  StreamSubscription? movieQuotesSubscription;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    quotes.add(MovieQuote(
-        quote: "Today we're going to teach fluffy how to fly!", movie: "UHF"));
-    quotes.add(MovieQuote(quote: "Never Trust a Bunny!", movie: "Hoodwinked!"));
-    quotes.add(MovieQuote(quote: "We've been Jammed!", movie: "Spaceballs"));
-    quotes.add(MovieQuote(
-        quote: "Anyone who has arms, start tying!",
-        movie: "The toy who saved Christmas"));
+
+    movieQuotesSubscription =
+        MovieQuotesCollectionManager.instance.startListening(() {
+      print("There are new quotes!!!!");
+      setState(() {});
+    });
+
+    // quotes.add(
+    //   MovieQuote(
+    //     quote: "I'll be back",
+    //     movie: "The Terminator",
+    //   ),
+    // );
+    // quotes.add(
+    //   MovieQuote(
+    //     quote: "Everything is Awesome",
+    //     movie: "The Lego Movie",
+    //   ),
+    // );
+    // quotes.add(
+    //   MovieQuote(
+    //     quote:
+    //         "Hello. My name is Inigo Montoya. You killed my father. Prepare to die.",
+    //     movie: "The Princess Bride",
+    //   ),
+    // );
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    movieNameTextController.dispose();
-    movieQuoteTextController.dispose();
+    quoteTextController.dispose();
+    movieTextController.dispose();
+    MovieQuotesCollectionManager.instance
+        .stopListening(movieQuotesSubscription);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<MovieQuoteRow> movieRows = quotes
-        .map((mq) => MovieQuoteRow(
-            movieQuote: mq,
-            onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (BuildContext context) {
-                return MovieQuoteDetailPage(mq);
-              }));
-              setState(() {});
-            }))
-        .toList();
+    // final List<MovieQuoteRow> movieRows = [];
     // for (final movieQuote in quotes) {
     //   movieRows.add(MovieQuoteRow(movieQuote));
     // }
+
+    final List<MovieQuoteRow> movieRows =
+        MovieQuotesCollectionManager.instance.latestMovieQuotes
+            .map((mq) => MovieQuoteRow(
+                  movieQuote: mq,
+                  onTap: () async {
+                    print(
+                        "You clicked on the movie quote ${mq.quote} - ${mq.movie}");
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (BuildContext context) {
+                          return MovieQuoteDetailPage(
+                              mq); // In Firebase use a documentId
+                        },
+                      ),
+                    );
+                    setState(() {});
+                  },
+                ))
+            .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Movie Quotes"),
       ),
       backgroundColor: Colors.grey[100],
       body: ListView(
-        children: movieRows,
-        // [
+        // children: [
         //   MovieQuoteRow(quotes[0]),
         //   MovieQuoteRow(quotes[1]),
         //   MovieQuoteRow(quotes[2]),
-        // ]
-        // ),
+        // ],
+        children: movieRows,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (() {
+        onPressed: () {
           showCreateQuoteDialog(context);
-        }),
+        },
         tooltip: 'Create',
         child: const Icon(Icons.add),
       ),
@@ -84,20 +117,32 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Create a Movie Quote'),
-          content:
-              //TODO: change all of this!
-              Column(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                    border: UnderlineInputBorder(), labelText: "Movie Name"),
-                controller: movieNameTextController,
-              ),
-              TextFormField(
+            children: <Widget>[
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4.0),
+                child: TextFormField(
+                  controller: quoteTextController,
                   decoration: const InputDecoration(
-                      border: UnderlineInputBorder(), labelText: "Quote"),
-                  controller: movieQuoteTextController),
+                    border: UnderlineInputBorder(),
+                    labelText: 'Enter the quote',
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4.0),
+                child: TextFormField(
+                  controller: movieTextController,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Enter the movie',
+                  ),
+                ),
+              ),
             ],
           ),
           actions: <Widget>[
@@ -107,8 +152,6 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
               ),
               child: const Text('Cancel'),
               onPressed: () {
-                movieNameTextController.text = "";
-                movieQuoteTextController.text = "";
                 Navigator.of(context).pop();
               },
             ),
@@ -119,13 +162,16 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
               child: const Text('Create'),
               onPressed: () {
                 setState(() {
-                  quotes.add(MovieQuote(
-                      quote: movieQuoteTextController.text,
-                      movie: movieNameTextController.text));
-                  Navigator.of(context).pop();
-                  movieNameTextController.text = "";
-                  movieQuoteTextController.text = "";
+                  // TODO: Add quotes with firebase!
+
+                  MovieQuotesCollectionManager.instance.add(
+                    quote: quoteTextController.text,
+                    movie: movieTextController.text,
+                  );
+                  quoteTextController.text = "";
+                  movieTextController.text = "";
                 });
+                Navigator.of(context).pop();
               },
             ),
           ],
