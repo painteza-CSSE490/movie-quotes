@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:movie_quotes/managers/movie_quote_document_manager.dart';
 
 import '../models/movie_quote.dart';
 
 class MovieQuoteDetailPage extends StatefulWidget {
-  final MovieQuote mq;
-  const MovieQuoteDetailPage(this.mq, {super.key});
+  // final MovieQuote mq;
+  final String documentId;
+  const MovieQuoteDetailPage(this.documentId, {super.key});
 
   @override
   State<MovieQuoteDetailPage> createState() => _MovieQuoteDetailPageState();
@@ -15,10 +19,22 @@ class MovieQuoteDetailPage extends StatefulWidget {
 class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
   final movieQuoteTextController = TextEditingController();
   final movieNameTextController = TextEditingController();
+  StreamSubscription? movieQuoteSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    movieQuoteSubscription = MovieQuoteDocumentManager.instance
+        .startListening(widget.documentId, () {
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     // TODO: implement dispose
+    MovieQuoteDocumentManager.instance.stopListening(movieQuoteSubscription);
     movieNameTextController.dispose();
     movieQuoteTextController.dispose();
     super.dispose();
@@ -32,7 +48,8 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
             IconButton(
               onPressed: () {
                 // Navigator.pop(context);
-                showEditQuoteDialog(context, widget.mq);
+                showEditQuoteDialog(context,
+                    MovieQuoteDocumentManager.instance.latestMovieQuote!);
               },
               icon: Icon(Icons.edit),
             ),
@@ -49,8 +66,10 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
         backgroundColor: Colors.grey[100],
         body: Center(
           child: LabelledTextDisplay(
-            movie: widget.mq.movie,
-            quote: widget.mq.quote,
+            movie: MovieQuoteDocumentManager.instance.latestMovieQuote?.movie ??
+                "",
+            quote: MovieQuoteDocumentManager.instance.latestMovieQuote?.quote ??
+                "",
           ),
         ));
   }
@@ -99,10 +118,10 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
               onPressed: () {
                 setState(() {
                   Navigator.of(context).pop();
-                  // movieNameTextController.text = "";
-                  // movieQuoteTextController.text = "";
-                  quote.movie = movieNameTextController.text;
-                  quote.quote = movieQuoteTextController.text;
+
+                  MovieQuoteDocumentManager.instance.updateLatestMovieQuote(
+                      quote: movieQuoteTextController.text,
+                      movie: movieNameTextController.text);
                 });
               },
             ),
