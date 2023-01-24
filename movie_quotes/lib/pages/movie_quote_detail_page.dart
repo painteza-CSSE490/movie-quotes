@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:movie_quotes/managers/movie_quote_document_manager.dart';
+import 'package:movie_quotes/managers/movie_quotes_collection_manager.dart';
 
 import '../models/movie_quote.dart';
 
@@ -56,8 +57,20 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
             IconButton(
                 onPressed: () {
                   Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                  final justDeletedQuote = MovieQuoteDocumentManager
+                      .instance.latestMovieQuote!.quote;
+                  final justDeletedMovie = MovieQuoteDocumentManager
+                      .instance.latestMovieQuote!.movie;
+                  MovieQuoteDocumentManager.instance.deleteLatestMovieQuote();
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("Deleted!"),
+                      action: SnackBarAction(
+                          label: "Undo",
+                          onPressed: () {
+                            MovieQuotesCollectionManager.instance.add(
+                                quote: justDeletedQuote,
+                                movie: justDeletedMovie);
+                          })));
                 },
                 icon: Icon(Icons.delete))
           ],
@@ -195,5 +208,3 @@ class LabelledTextDisplay extends StatelessWidget {
     ));
   }
 }
-
-const snackbar = SnackBar(content: Text("Deleted!"));

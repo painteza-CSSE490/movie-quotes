@@ -53,4 +53,11 @@ class MovieQuoteDocumentManager {
       },
     ).catchError((error) => print("Error adding movie quote: $error"));
   }
+
+  Future<void> deleteLatestMovieQuote() {
+    return _ref
+        .doc(latestMovieQuote?.documentId)
+        .delete()
+        .catchError((error) => print("Error adding movie quote: $error"));
+  }
 }
