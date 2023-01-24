@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -40,8 +41,8 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
                 labelText: 'Email',
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
+                if (value == null || !EmailValidator.validate(value)) {
+                  return 'Please enter a valid email';
                 }
                 return null;
               },
