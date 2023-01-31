@@ -19,13 +19,15 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   UniqueKey? _loginObserverKey;
+
   @override
   void initState() {
-    // TODO: Remove this quick hack!
-    // AuthManager.instance.startListening();
     _loginObserverKey = AuthManager.instance.addLoginObserver(() {
-      print("Logg in here.");
+      print("EmailPassword page: Log in observed.  TODO: pop this page!");
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Start class here on Monday Jan 30, 2022!
     });
     super.initState();
   }
@@ -34,11 +36,15 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
   void dispose() {
     emailTextController.dispose();
     passwordTextController.dispose();
+    AuthManager.instance.removeObserver(_loginObserverKey);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    emailTextController.text = "a9@b.co"; // TODO Remove: HACK FOR TESTING!
+    passwordTextController.text = "123456"; // TODO Remove: HACK FOR TESTING!
+
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.isNewUser
@@ -110,7 +116,7 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
                           password: passwordTextController.text,
                         );
                       } else {
-                        print("TODO: Log in an existing user");
+                        // print("TODO: Log in an existing user");
                         AuthManager.instance.logInExistingUserEmailPassword(
                           context: context,
                           email: emailTextController.text,

@@ -50,27 +50,32 @@ class AuthManager {
   }
 
   UniqueKey addLoginObserver(Function observer) {
-    startListening(); //Lazy load, does nothing in future calls
+    startListening(); // Lazy load, does nothing in future calls.
     UniqueKey key = UniqueKey();
     _loginObservers[key] = observer;
     return key;
   }
 
   UniqueKey addLogoutObserver(Function observer) {
+    startListening(); // Lazy load, does nothing in future calls.
     UniqueKey key = UniqueKey();
     _logoutObservers[key] = observer;
     return key;
   }
 
-  void removeObserver(UniqueKey key) {
+  void removeObserver(UniqueKey? key) {
     _loginObservers.remove(key);
     _logoutObservers.remove(key);
   }
 
+  void signOut() {
+    FirebaseAuth.instance.signOut();
+  }
+
   String get email => _user?.email ?? "";
   String get uid => _user?.uid ?? "";
+  // bool get isSignedIn => true;
   bool get isSignedIn => _user != null;
-
   // --- Specific auth methods...
 
   void createNewUserEmailPassword({
@@ -100,32 +105,6 @@ class AuthManager {
     }
   }
 
-  void signInExistingUserEmailAndPassword({
-    required BuildContext context,
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      print("AuthManager: Created a User ${credential.user?.email}");
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        _showAuthSnackbar(
-            context: context,
-            authErrorMessage: "The password provided is too weak.");
-      } else if (e.code == 'email-already-in-use') {
-        _showAuthSnackbar(
-            context: context,
-            authErrorMessage: "The account already exists for that email.");
-      }
-    } catch (e) {
-      _showAuthSnackbar(context: context, authErrorMessage: e.toString());
-    }
-  }
-
   void _showAuthSnackbar({
     required BuildContext context,
     required String authErrorMessage,
@@ -135,10 +114,6 @@ class AuthManager {
         content: Text(authErrorMessage),
       ),
     );
-  }
-
-  void signOut() {
-    FirebaseAuth.instance.signOut();
   }
 
   void logInExistingUserEmailPassword({

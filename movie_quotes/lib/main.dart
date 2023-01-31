@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:movie_quotes/pages/login_front_page.dart';
 import 'package:movie_quotes/pages/movie_quotes_list_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-Future<void> main() async {
+void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -14,7 +13,6 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,9 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'Movie Quotes',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        useMaterial3: true,
       ),
-      // home: const MovieQuotesListPage(),
       home: const MovieQuotesListPage(),
     );
   }
