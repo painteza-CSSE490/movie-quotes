@@ -25,7 +25,6 @@ class MovieQuotesCollectionManager {
     });
   }
 
-  // TODO: Make a stop listening
   void stopListening(StreamSubscription? subscription) {
     subscription?.cancel();
   }
@@ -34,12 +33,14 @@ class MovieQuotesCollectionManager {
     required String quote,
     required String movie,
   }) {
-    return _ref.add(
-      {
-        kMovieQuote_quote: quote,
-        kMovieQuote_movie: movie,
-        kMovieQuote_lastTouched: Timestamp.now(),
-      },
-    );
+    return _ref
+        .add({
+          kMovieQuote_quote: quote,
+          kMovieQuote_movie: movie,
+          kMovieQuote_lastTouched: Timestamp.now(),
+        })
+        .then((DocumentReference docRef) =>
+            print("Movie Quote added with id ${docRef.id}"))
+        .catchError((error) => print("Failed to add movie quote: $error"));
   }
 }

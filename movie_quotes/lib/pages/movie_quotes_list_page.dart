@@ -6,6 +6,8 @@ import 'package:movie_quotes/managers/movie_quotes_collection_manager.dart';
 import 'package:movie_quotes/models/movie_quote.dart';
 import 'package:movie_quotes/pages/movie_quote_detail_page.dart';
 
+import '../managers/auth_manager.dart';
+
 class MovieQuotesListPage extends StatefulWidget {
   const MovieQuotesListPage({super.key});
 
@@ -20,13 +22,22 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
 
   StreamSubscription? movieQuotesSubscription;
 
+  UniqueKey? _loginObserverKey;
+
+  UniqueKey? _logoutObserverKey;
+
   @override
   void initState() {
     super.initState();
 
     movieQuotesSubscription =
         MovieQuotesCollectionManager.instance.startListening(() {
-      print("There are new quotes!!!!");
+      setState(() {});
+    });
+    _loginObserverKey = AuthManager.instance.addLoginObserver(() {
+      setState(() {});
+    });
+    _logoutObserverKey = AuthManager.instance.addLogoutObserver(() {
       setState(() {});
     });
   }
@@ -37,16 +48,12 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
     movieTextController.dispose();
     MovieQuotesCollectionManager.instance
         .stopListening(movieQuotesSubscription);
+    // Should dispose here.
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // final List<MovieQuoteRow> movieRows = [];
-    // for (final movieQuote in quotes) {
-    //   movieRows.add(MovieQuoteRow(movieQuote));
-    // }
-
     final List<MovieQuoteRow> movieRows =
         MovieQuotesCollectionManager.instance.latestMovieQuotes
             .map((mq) => MovieQuoteRow(
@@ -70,15 +77,26 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Movie Quotes"),
-      ),
+          title: const Text("Movie Quotes"),
+          actions: AuthManager.instance.isSignedIn
+              ? [
+                  IconButton(
+                    onPressed: () {
+                      AuthManager.instance.signOut();
+                    },
+                    tooltip: "Log out",
+                    icon: const Icon(Icons.logout),
+                  ),
+                ]
+              : [
+                  IconButton(
+                    onPressed: () {},
+                    tooltip: "Log In",
+                    icon: const Icon(Icons.login),
+                  ),
+                ]),
       backgroundColor: Colors.grey[100],
       body: ListView(
-        // children: [
-        //   MovieQuoteRow(quotes[0]),
-        //   MovieQuoteRow(quotes[1]),
-        //   MovieQuoteRow(quotes[2]),
-        // ],
         children: movieRows,
       ),
       floatingActionButton: FloatingActionButton(
@@ -142,8 +160,6 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
               child: const Text('Create'),
               onPressed: () {
                 setState(() {
-                  // TODO: Add quotes with firebase!
-
                   MovieQuotesCollectionManager.instance.add(
                     quote: quoteTextController.text,
                     movie: movieTextController.text,

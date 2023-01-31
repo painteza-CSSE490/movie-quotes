@@ -23,41 +23,24 @@ class MovieQuoteDocumentManager {
     });
   }
 
-  // TODO: Make a stop listening
-  void stopListening(StreamSubscription? subscription) {
-    subscription?.cancel();
-  }
+  void stopListening(StreamSubscription? subscription) =>
+      subscription?.cancel();
 
-  Future<void> add({
+  void update({
     required String quote,
     required String movie,
   }) {
-    return _ref.add(
-      {
-        kMovieQuote_quote: quote,
-        kMovieQuote_movie: movie,
-        kMovieQuote_lastTouched: Timestamp.now(),
-      },
-    );
+    if (latestMovieQuote == null) {
+      return;
+    }
+    _ref.doc(latestMovieQuote!.documentId!).update({
+      kMovieQuote_quote: quote,
+      kMovieQuote_movie: movie,
+      kMovieQuote_lastTouched: Timestamp.now(),
+    }).catchError((error) => print("Failed to update the movie quote: $error"));
   }
 
-  Future<void> updateLatestMovieQuote({
-    required String quote,
-    required String movie,
-  }) {
-    return _ref.doc(latestMovieQuote?.documentId).update(
-      {
-        kMovieQuote_quote: quote,
-        kMovieQuote_movie: movie,
-        kMovieQuote_lastTouched: Timestamp.now(),
-      },
-    ).catchError((error) => print("Error adding movie quote: $error"));
-  }
-
-  Future<void> deleteLatestMovieQuote() {
-    return _ref
-        .doc(latestMovieQuote?.documentId)
-        .delete()
-        .catchError((error) => print("Error adding movie quote: $error"));
+  Future<void> delete() {
+    return _ref.doc(latestMovieQuote?.documentId!).delete();
   }
 }

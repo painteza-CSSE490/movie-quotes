@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:movie_quotes/models/firestore_model_utils.dart';
 
 const String kMovieQuoteCollectionPath = "MovieQuotes";

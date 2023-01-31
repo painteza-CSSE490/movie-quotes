@@ -1,15 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:movie_quotes/managers/movie_quote_document_manager.dart';
 import 'package:movie_quotes/managers/movie_quotes_collection_manager.dart';
 
-import '../models/movie_quote.dart';
-
 class MovieQuoteDetailPage extends StatefulWidget {
-  // final MovieQuote mq;
   final String documentId;
   const MovieQuoteDetailPage(this.documentId, {super.key});
 
@@ -18,97 +13,145 @@ class MovieQuoteDetailPage extends StatefulWidget {
 }
 
 class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
-  final movieQuoteTextController = TextEditingController();
-  final movieNameTextController = TextEditingController();
+  final quoteTextController = TextEditingController();
+  final movieTextController = TextEditingController();
+
   StreamSubscription? movieQuoteSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    movieQuoteSubscription = MovieQuoteDocumentManager.instance
-        .startListening(widget.documentId, () {
-      setState(() {});
-    });
+    movieQuoteSubscription = MovieQuoteDocumentManager.instance.startListening(
+      widget.documentId,
+      () {
+        setState(() {});
+      },
+    );
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    quoteTextController.dispose();
+    movieTextController.dispose();
     MovieQuoteDocumentManager.instance.stopListening(movieQuoteSubscription);
-    movieNameTextController.dispose();
-    movieQuoteTextController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          actions: [
-            IconButton(
+      appBar: AppBar(
+        title: const Text("Movie Quotes"),
+        actions: [
+          Visibility(
+            visible:
+                MovieQuoteDocumentManager.instance.latestMovieQuote != null,
+            child: IconButton(
               onPressed: () {
-                // Navigator.pop(context);
-                showEditQuoteDialog(context,
-                    MovieQuoteDocumentManager.instance.latestMovieQuote!);
+                showEditQuoteDialog(context);
               },
-              icon: Icon(Icons.edit),
+              icon: const Icon(Icons.edit),
             ),
-            IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  final justDeletedQuote = MovieQuoteDocumentManager
-                      .instance.latestMovieQuote!.quote;
-                  final justDeletedMovie = MovieQuoteDocumentManager
-                      .instance.latestMovieQuote!.movie;
-                  MovieQuoteDocumentManager.instance.deleteLatestMovieQuote();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("Deleted!"),
-                      action: SnackBarAction(
-                          label: "Undo",
-                          onPressed: () {
-                            MovieQuotesCollectionManager.instance.add(
-                                quote: justDeletedQuote,
-                                movie: justDeletedMovie);
-                          })));
-                },
-                icon: Icon(Icons.delete))
-          ],
-          title: Text("Movie Quotes"),
-        ),
-        backgroundColor: Colors.grey[100],
-        body: Center(
-          child: LabelledTextDisplay(
-            movie: MovieQuoteDocumentManager.instance.latestMovieQuote?.movie ??
-                "",
-            quote: MovieQuoteDocumentManager.instance.latestMovieQuote?.quote ??
-                "",
           ),
-        ));
+          Visibility(
+            visible:
+                MovieQuoteDocumentManager.instance.latestMovieQuote != null,
+            child: IconButton(
+              onPressed: () {
+                final justDeletedQuote =
+                    MovieQuoteDocumentManager.instance.latestMovieQuote!.quote;
+                final justDeletedMovie =
+                    MovieQuoteDocumentManager.instance.latestMovieQuote!.movie;
+
+                MovieQuoteDocumentManager.instance.delete();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Quote Deleted'),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      onPressed: () {
+                        MovieQuotesCollectionManager.instance.add(
+                          quote: justDeletedQuote,
+                          movie: justDeletedMovie,
+                        );
+                      },
+                    ),
+                  ),
+                );
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.delete),
+            ),
+          ),
+          const SizedBox(
+            width: 40.0,
+          ),
+        ],
+      ),
+      backgroundColor: Colors.grey[100],
+      body: Container(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            LabelledTextDisplay(
+              title: "Quote:",
+              content:
+                  MovieQuoteDocumentManager.instance.latestMovieQuote?.quote ??
+                      "",
+              iconData: Icons.format_quote_outlined,
+            ),
+            LabelledTextDisplay(
+              title: "Movie:",
+              content:
+                  MovieQuoteDocumentManager.instance.latestMovieQuote?.movie ??
+                      "",
+              iconData: Icons.movie_filter_outlined,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> showEditQuoteDialog(BuildContext context, MovieQuote quote) {
-    movieNameTextController.text = quote.movie;
-    movieQuoteTextController.text = quote.quote;
+  Future<void> showEditQuoteDialog(BuildContext context) {
+    quoteTextController.text =
+        MovieQuoteDocumentManager.instance.latestMovieQuote?.quote ?? "";
+    movieTextController.text =
+        MovieQuoteDocumentManager.instance.latestMovieQuote?.movie ?? "";
+
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Edit a Movie Quote'),
-          content:
-              //TODO: change all of this!
-              Column(
+          title: const Text('Edit this Movie Quote'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                    border: UnderlineInputBorder(), labelText: "Movie Name"),
-                controller: movieNameTextController,
-              ),
-              TextFormField(
+            children: <Widget>[
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4.0),
+                child: TextFormField(
+                  controller: quoteTextController,
                   decoration: const InputDecoration(
-                      border: UnderlineInputBorder(), labelText: "Quote"),
-                  controller: movieQuoteTextController),
+                    border: UnderlineInputBorder(),
+                    labelText: 'Quote:',
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4.0),
+                child: TextFormField(
+                  controller: movieTextController,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Movie:',
+                  ),
+                ),
+              ),
             ],
           ),
           actions: <Widget>[
@@ -118,8 +161,6 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
               ),
               child: const Text('Cancel'),
               onPressed: () {
-                // movieNameTextController.text = "";
-                // movieQuoteTextController.text = "";
                 Navigator.of(context).pop();
               },
             ),
@@ -127,15 +168,17 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
               style: TextButton.styleFrom(
                 textStyle: Theme.of(context).textTheme.labelLarge,
               ),
-              child: const Text('Save'),
+              child: const Text('Update'),
               onPressed: () {
                 setState(() {
-                  Navigator.of(context).pop();
-
-                  MovieQuoteDocumentManager.instance.updateLatestMovieQuote(
-                      quote: movieQuoteTextController.text,
-                      movie: movieNameTextController.text);
+                  MovieQuoteDocumentManager.instance.update(
+                    quote: quoteTextController.text,
+                    movie: movieTextController.text,
+                  );
+                  quoteTextController.text = "";
+                  movieTextController.text = "";
                 });
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -146,65 +189,55 @@ class _MovieQuoteDetailPageState extends State<MovieQuoteDetailPage> {
 }
 
 class LabelledTextDisplay extends StatelessWidget {
-  final movie;
-  final quote;
-  const LabelledTextDisplay(
-      {super.key, required this.movie, required this.quote});
+  final String title;
+  final String content;
+  final IconData iconData;
+
+  const LabelledTextDisplay({
+    super.key,
+    required this.title,
+    required this.content,
+    required this.iconData,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        child: Column(
-      children: [
-        Card(
-            margin: EdgeInsets.symmetric(vertical: 50, horizontal: 100),
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 40, horizontal: 100),
-              child: Column(
+      margin: const EdgeInsets.symmetric(vertical: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+                fontSize: 30.0,
+                fontWeight: FontWeight.w800,
+                fontFamily: "Caveat"),
+          ),
+          Card(
+            child: Container(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Icon(Icons.format_quote),
-                      ),
-                      Text(
-                        "Quote: ",
-                        style: TextStyle(fontSize: 30),
-                      ),
-                    ],
+                  Icon(iconData),
+                  const SizedBox(
+                    width: 8.0,
                   ),
-                  Text(quote),
+                  Flexible(
+                    child: Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 18.0,
+                        // fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            )),
-        Card(
-            margin: const EdgeInsets.symmetric(vertical: 50, horizontal: 100),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 40, horizontal: 100),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Icon(Icons.movie),
-                      ),
-                      Text(
-                        "Movie: ",
-                        style: TextStyle(fontSize: 30),
-                      ),
-                    ],
-                  ),
-                  Text(movie),
-                ],
-              ),
-            )),
-      ],
-    ));
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

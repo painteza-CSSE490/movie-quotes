@@ -2,11 +2,15 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/widgets.dart';
+import 'package:movie_quotes/managers/auth_manager.dart';
 
 class EmailPasswordAuthPage extends StatefulWidget {
   final bool isNewUser;
-  const EmailPasswordAuthPage({required this.isNewUser, super.key});
+  const EmailPasswordAuthPage({
+    required this.isNewUser,
+    super.key,
+  });
+
   @override
   State<EmailPasswordAuthPage> createState() => _EmailPasswordAuthPageState();
 }
@@ -15,9 +19,19 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  UniqueKey? _loginObserverKey;
+  @override
+  void initState() {
+    // TODO: Remove this quick hack!
+    // AuthManager.instance.startListening();
+    _loginObserverKey = AuthManager.instance.addLoginObserver(() {
+      print("Logg in here.");
+    });
+    super.initState();
+  }
+
   @override
   void dispose() {
-    // TODO: implement dispose
     emailTextController.dispose();
     passwordTextController.dispose();
     super.dispose();
@@ -26,63 +40,95 @@ class _EmailPasswordAuthPageState extends State<EmailPasswordAuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Center(
-              child: Text(widget.isNewUser ? "Create an Account" : "Log In"))),
-      body: Form(
-        key: _formKey,
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 4.0),
-            child: TextFormField(
-              controller: emailTextController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Email',
+        appBar: AppBar(
+          title: Text(widget.isNewUser
+              ? "Create a New User"
+              : "Log in an Existing User"),
+        ),
+        body: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 250.0,
               ),
-              validator: (value) {
-                if (value == null || !EmailValidator.validate(value)) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 4.0),
-            child: TextFormField(
-              controller: passwordTextController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Password',
-                hintText: 'Passwords mus be at least 6 characters',
-              ),
-              validator: (value) {
-                if (value == null || value.length < 6) {
-                  return 'Passwords mus be at least 6 characters';
-                }
-                return null;
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Process Data
-                    if (widget.isNewUser) {
-                      print("Create New User");
-                    } else {
-                      print("Login");
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: TextFormField(
+                  controller: emailTextController,
+                  validator: (String? value) {
+                    if (value == null || !EmailValidator.validate(value)) {
+                      return "Please enter a valid email";
                     }
-                  }
-                },
-                child: Text(widget.isNewUser ? "Create New Account" : "Login")),
-          )
-        ]),
-      ),
-    );
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                      labelText: "Email",
+                      hintText: "Must be a valid email format"),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: TextFormField(
+                  controller: passwordTextController,
+                  obscureText: true,
+                  validator: (String? value) {
+                    if (value == null || value.length < 6) {
+                      return "Passwords must be at least 6 characters";
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.abc),
+                      border: OutlineInputBorder(),
+                      labelText: 'Password',
+                      hintText: "Passwords must be at least 6 characters"),
+                ),
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              Container(
+                height: 40.0,
+                width: 220.0,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      print(
+                          "Email: ${emailTextController.text}  Password: ${passwordTextController.text}");
+                      if (widget.isNewUser) {
+                        print("Creating a new user!");
+                        AuthManager.instance.createNewUserEmailPassword(
+                          context: context,
+                          email: emailTextController.text,
+                          password: passwordTextController.text,
+                        );
+                      } else {
+                        print("TODO: Log in an existing user");
+                        AuthManager.instance.logInExistingUserEmailPassword(
+                          context: context,
+                          email: emailTextController.text,
+                          password: passwordTextController.text,
+                        );
+                      }
+                    } else {
+                      print("This form isn't valid, do nothing");
+                    }
+                  },
+                  child: Text(
+                    widget.isNewUser ? "Create Account" : "Log In",
+                    style: const TextStyle(color: Colors.white, fontSize: 18.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 }

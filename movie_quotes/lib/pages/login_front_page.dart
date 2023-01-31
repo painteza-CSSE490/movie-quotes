@@ -1,10 +1,6 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/widgets.dart';
-import 'package:movie_quotes/components/login_button_component.dart';
 import 'package:movie_quotes/pages/email_password_auth_page.dart';
 
 class LoginFrontPage extends StatefulWidget {
@@ -18,61 +14,94 @@ class _LoginFrontPageState extends State<LoginFrontPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[10],
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Center(
-            child: Text("Movie Quotes",
-                textScaleFactor: 5,
-                style: TextStyle(
-                  fontFamily: "cursive",
-                  // fontStyle: FontFace("cursive", source),
-                )),
-          ),
-          Center(
-            child: LoginButtonComponent(
-              callback: () async {
-                await Navigator.push(
+      appBar: AppBar(),
+      backgroundColor: Colors.grey[200],
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            const Expanded(
+              child: Center(
+                child: Text(
+                  "Movie Quotes",
+                  style: TextStyle(
+                    fontFamily: "Rowdies",
+                    fontSize: 56.0,
+                  ),
+                ),
+              ),
+            ),
+            LoginButton(
+              title: "Log in",
+              callback: () {
+                print("TODO: Go to the next page to log in");
+                Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (BuildContext context) {
-                      return const EmailPasswordAuthPage(
-                        isNewUser: true,
-                      );
+                      return const EmailPasswordAuthPage(isNewUser: false);
                     },
                   ),
                 );
               },
-              buttonText: "Create an account",
             ),
-          ),
-          Center(
-            child: LoginButtonComponent(
-              callback: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const EmailPasswordAuthPage(
-                        isNewUser: false,
-                      );
-                    },
-                  ),
-                );
-              },
-              buttonText: "Log In",
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Don't have an account?"),
+                TextButton(
+                  onPressed: () {
+                    print("TODO: Go to the next page to create an account in");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (BuildContext context) {
+                          return const EmailPasswordAuthPage(isNewUser: true);
+                        },
+                      ),
+                    );
+                  },
+                  child: const Text("Sign Up Here"),
+                ),
+              ],
             ),
-          ),
-          Center(
-            child: LoginButtonComponent(
-              callback: () {},
-              buttonText: "Google Facebook, etc.",
+            const SizedBox(
+              height: 60.0,
             ),
-          )
-        ],
+            LoginButton(
+                title: "Or sign in with Google",
+                callback: () {
+                  print(
+                      "TODO: Log in using Firebase Auth and an OAuth provider (like Google)");
+                })
+          ],
+        ),
       ),
     );
+  }
+}
+
+class LoginButton extends StatelessWidget {
+  final String title;
+  final Function() callback;
+  const LoginButton({
+    required this.title,
+    required this.callback,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        height: 40.0,
+        width: 250.0,
+        margin: const EdgeInsets.all(12.0),
+        child: ElevatedButton(
+          onPressed: callback,
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 16.0),
+          ),
+        ));
   }
 }

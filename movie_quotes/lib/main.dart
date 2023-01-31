@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // home: const MovieQuotesListPage(),
-      home: const LoginFrontPage(),
+      home: const MovieQuotesListPage(),
     );
   }
 }
