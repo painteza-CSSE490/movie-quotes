@@ -31,18 +31,37 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
   void initState() {
     super.initState();
 
-    movieQuotesSubscription =
-        MovieQuotesCollectionManager.instance.startListening(() {
-      setState(() {});
-    });
+    _showAllQuotes();
 
     _loginObserverKey = AuthManager.instance.addLoginObserver(() {
       setState(() {});
     });
 
     _logoutObserverKey = AuthManager.instance.addLogoutObserver(() {
+      _showAllQuotes();
       setState(() {});
     });
+  }
+
+  _showAllQuotes() {
+    MovieQuotesCollectionManager.instance
+        .stopListening(movieQuotesSubscription);
+    movieQuotesSubscription =
+        MovieQuotesCollectionManager.instance.startListening(() {
+      setState(() {});
+    });
+  }
+
+  _showOnlyMyQuotes() {
+    MovieQuotesCollectionManager.instance
+        .stopListening(movieQuotesSubscription);
+    movieQuotesSubscription =
+        MovieQuotesCollectionManager.instance.startListening(
+      () {
+        setState(() {});
+      },
+      isFilteredForMe: true,
+    );
   }
 
   @override
@@ -82,8 +101,12 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
     return Scaffold(
       drawer: AuthManager.instance.isSignedIn
           ? ListPageSideDrawer(
-              showAllCallback: () {},
-              showOnlyMineCallback: () {},
+              showAllCallback: () {
+                _showAllQuotes();
+              },
+              showOnlyMineCallback: () {
+                _showOnlyMyQuotes();
+              },
             )
           : null,
       appBar: AppBar(
