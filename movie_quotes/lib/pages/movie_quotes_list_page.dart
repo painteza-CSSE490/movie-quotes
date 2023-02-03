@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:movie_quotes/components/list_page_side_drawer.dart';
 import 'package:movie_quotes/components/movie_quote_row_component.dart';
@@ -22,10 +23,11 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
   final quoteTextController = TextEditingController();
   final movieTextController = TextEditingController();
 
-  StreamSubscription? movieQuotesSubscription;
+  // StreamSubscription? movieQuotesSubscription;
 
   UniqueKey? _loginObserverKey;
   UniqueKey? _logoutObserverKey;
+  bool _isShowingAllQuotes = true;
 
   @override
   void initState() {
@@ -44,32 +46,38 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
   }
 
   _showAllQuotes() {
-    MovieQuotesCollectionManager.instance
-        .stopListening(movieQuotesSubscription);
-    movieQuotesSubscription =
-        MovieQuotesCollectionManager.instance.startListening(() {
-      setState(() {});
+    // MovieQuotesCollectionManager.instance
+    //     .stopListening(movieQuotesSubscription);
+    // movieQuotesSubscription =
+    //     MovieQuotesCollectionManager.instance.startListening(() {
+    //   setState(() {});
+    // });
+    setState(() {
+      _isShowingAllQuotes = true;
     });
   }
 
   _showOnlyMyQuotes() {
-    MovieQuotesCollectionManager.instance
-        .stopListening(movieQuotesSubscription);
-    movieQuotesSubscription =
-        MovieQuotesCollectionManager.instance.startListening(
-      () {
-        setState(() {});
-      },
-      isFilteredForMe: true,
-    );
+    // MovieQuotesCollectionManager.instance
+    //     .stopListening(movieQuotesSubscription);
+    // movieQuotesSubscription =
+    //     MovieQuotesCollectionManager.instance.startListening(
+    //   () {
+    //     setState(() {});
+    //   },
+    //   isFilteredForMe: true,
+    // );
+    setState(() {
+      _isShowingAllQuotes = false;
+    });
   }
 
   @override
   void dispose() {
     quoteTextController.dispose();
     movieTextController.dispose();
-    MovieQuotesCollectionManager.instance
-        .stopListening(movieQuotesSubscription);
+    // MovieQuotesCollectionManager.instance
+    //     .stopListening(movieQuotesSubscription);
     AuthManager.instance.removeObserver(_loginObserverKey);
     AuthManager.instance.removeObserver(_logoutObserverKey);
     super.dispose();
@@ -128,8 +136,29 @@ class _MovieQuotesListPageState extends State<MovieQuotesListPage> {
               ],
       ),
       backgroundColor: Colors.grey[100],
-      body: ListView(
-        children: movieRows,
+      body: FirestoreListView<MovieQuote>(
+        query: _isShowingAllQuotes
+            ? MovieQuotesCollectionManager.instance.allMovieQUotesQuery
+            : MovieQuotesCollectionManager.instance.allMineMovieQuotes,
+        itemBuilder: (context, snapshot) {
+          MovieQuote mq = snapshot.data();
+          return MovieQuoteRow(
+            movieQuote: mq,
+            onTap: () async {
+              print("You clicked on the movie quote ${mq.quote} - ${mq.movie}");
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) {
+                    return MovieQuoteDetailPage(
+                        mq.documentId!); // In Firebase use a documentId
+                  },
+                ),
+              );
+              setState(() {});
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

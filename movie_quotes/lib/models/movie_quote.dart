@@ -37,4 +37,13 @@ class MovieQuote {
   String toString() {
     return "$quote from the movie $movie";
   }
+
+  Map<String, Object?> toMap() {
+    return {
+      kMovieQuote_quote: quote,
+      kMovieQuote_movie: movie,
+      kMovieQuote_lastTouched: lastTouched,
+      kMovieQuote_authorUid: authorUid,
+    };
+  }
 }
